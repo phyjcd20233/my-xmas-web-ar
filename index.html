@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>WebAR Christmas Village - 互動體驗</title>
+  <title>WebAR Christmas Village - 3D 動畫互動</title>
 
   <!-- 引入 A-Frame 與相關擴充 -->
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
@@ -17,7 +17,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    /* 1. 開始按鈕蓋板 (Splash Screen) */
+    /* 1. 開始按鈕畫面 */
     #start-screen {
       position: fixed;
       top: 0;
@@ -57,7 +57,7 @@
       box-shadow: 0 4px 15px rgba(230, 57, 70, 0.4);
     }
 
-    /* 2 & 3. 掃描中引導介面 */
+    /* 2. 掃描中引導介面 */
     #scanner-overlay {
       position: absolute;
       top: 0;
@@ -72,7 +72,7 @@
       box-sizing: border-box;
       padding: 30px;
       z-index: 99;
-      display: none; /* 點擊開始後才顯示 */
+      display: none;
     }
     .scan-guide {
       background: rgba(0, 0, 0, 0.7);
@@ -83,41 +83,11 @@
       text-align: center;
       backdrop-filter: blur(5px);
     }
-
-    /* 4. 掃描成功 Sticker 貼紙 */
-    #success-sticker {
-      position: absolute;
-      bottom: 40px;
-      left: 50%;
-      transform: translateX(-50%) scale(0.8);
-      background: rgba(255, 255, 255, 0.95);
-      color: #1b4332;
-      padding: 12px 25px;
-      border-radius: 50px;
-      font-weight: bold;
-      font-size: 16px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      z-index: 999;
-      opacity: 0;
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      pointer-events: none;
-    }
-    #success-sticker.show {
-      opacity: 1;
-      transform: translateX(-50%) scale(1);
-    }
-    #success-sticker span {
-      font-size: 20px;
-    }
   </style>
 
   <script>
-    // 控制點擊「開始」按鈕後的邏輯
+    // 點擊開始按鈕
     function startAR() {
-      // 隱藏開始畫面
       document.getElementById('start-screen').style.opacity = '0';
       setTimeout(() => {
         document.getElementById('start-screen').style.display = 'none';
@@ -125,24 +95,34 @@
       }, 500);
     }
 
-    // 監聽 MindAR 識別事件
+    // 監聽識別事件，改為觸發動畫或特效
     document.addEventListener("DOMContentLoaded", function() {
       const targetEntity = document.querySelector('#ar-target');
       const scanGuide = document.getElementById('scan-text');
-      const successSticker = document.getElementById('success-sticker');
+      const villageModel = document.querySelector('#village-model');
 
-      // 當鏡頭成功掃描並辨識到指定圖片時
+      // 當成功對準圖片時
       targetEntity.addEventListener('targetFound', event => {
-        scanGuide.innerText = "✨ 掃描成功！聖誕小鎮已展開";
+        scanGuide.innerText = "✨ 掃描成功！正在播放聖誕動畫";
         scanGuide.style.background = "rgba(40, 167, 69, 0.8)";
-        successSticker.classList.add('show'); // 顯示成功 Sticker
+
+        // 範例：當掃描成功時，透過程式動態加入放大或旋轉的特效動畫
+        villageModel.setAttribute('animation', {
+          property: 'rotation',
+          to: '0 360 0',
+          dur: 5000,
+          loop: true,
+          easing: 'linear'
+        });
       });
 
-      // 當鏡頭移開圖片時
+      // 當移開圖片時
       targetEntity.addEventListener('targetLost', event => {
         scanGuide.innerText = "🎁 請將手機鏡頭對準指定的聖誕圖片";
         scanGuide.style.background = "rgba(0, 0, 0, 0.7)";
-        successSticker.classList.remove('show'); // 隱藏 Sticker
+
+        // 移開時清除動態特效
+        villageModel.removeAttribute('animation');
       });
     });
   </script>
@@ -153,25 +133,20 @@
   <!-- 1. 開始按鈕畫面 -->
   <div id="start-screen">
     <h1>🎄 聖誕小鎮 WebAR 體驗</h1>
-    <p>點擊下方按鈕啟動相機，準備探索 AR 聖誕世界！</p>
+    <p>點擊下方按鈕啟動相機，解鎖 3D 動畫特效！</p>
     <button id="start-btn" onclick="startAR()">開始體驗</button>
   </div>
 
-  <!-- 2 & 3. 掃描引導介面 -->
+  <!-- 2. 掃描引導介面 -->
   <div id="scanner-overlay">
     <div id="scan-text" class="scan-guide">🎁 請將手機鏡頭對準指定的聖誕圖片</div>
   </div>
 
-  <!-- 4. 掃瞄成功解鎖的 Sticker 貼紙 -->
-  <div id="success-sticker">
-    <span>🌟</span> <span>已解鎖：聖誕小鎮成就達成！</span>
-  </div>
-
-  <!-- A-Scene 結合 MindAR 圖像追蹤 -->
+  <!-- A-Scene 結合 MindAR 圖像追蹤與高解析度相機設定 -->
   <a-scene 
-    mindar-image="imageTargetSrc: ./assets/targets.mind; smooth: true;" 
+    mindar-image="imageTargetSrc: ./assets/targets.mind; smooth: true; uiScanning: no;" 
     color-space="sRGB" 
-    renderer="colorManagement: true, physicallyCorrectLights" 
+    renderer="colorManagement: true, physicallyCorrectLights, highPerformance: true" 
     vr-mode-ui="enabled: false" 
     device-orientation-permission-ui="enabled: false">
 
@@ -182,9 +157,10 @@
     <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
     <a-entity light="type: directional; intensity: 1;" position="1 2 1"></a-entity>
 
-    <!-- 綁定目標圖片與事件監聽 ID -->
+    <!-- 綁定目標圖片與 3D 模型 (加入 id 以便透過 JS 控制動畫) -->
     <a-entity id="ar-target" mindar-image-target="targetIndex: 0">
       <a-gltf-model 
+        id="village-model"
         src="#christmas-village" 
         position="0 0 0" 
         scale="0.6 0.6 0.6" 
@@ -193,6 +169,7 @@
       </a-gltf-model>
     </a-entity>
 
+    <!-- 設定高畫質視訊流相機 -->
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
   </a-scene>
 
