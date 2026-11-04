@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>WebAR Christmas Village - MTR 獎賞活動</title>
+  <title>WebAR Christmas Village - MTR 獎賞與優惠券</title>
 
-  <!-- 引入 A-Frame 與相關擴充 -->
+  <!-- 引入 A-Frame 與 MindAR 擴充套件 -->
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
@@ -84,7 +84,7 @@
       backdrop-filter: blur(5px);
     }
 
-    /* 3. 掃描成功貼紙（點擊可進入下一頁） */
+    /* 3. 掃描成功貼紙 */
     #success-sticker {
       position: absolute;
       bottom: 40px;
@@ -103,67 +103,112 @@
       z-index: 999;
       opacity: 0;
       transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      pointer-events: auto; /* 讓貼紙可以被點擊 */
+      pointer-events: auto;
       cursor: pointer;
     }
     #success-sticker.show {
       opacity: 1;
       transform: translateX(-50%) scale(1);
     }
-    #success-sticker span {
-      font-size: 20px;
-    }
 
-    /* 4. 下一頁：MTR 積分結果頁面 */
-    #reward-page {
+    /* 通用彈窗/頁面遮罩 */
+    .modal-page {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: #f8f9fa;
-      display: none; /* 預設隱藏，掃描成功後點擊貼紙顯示 */
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      display: none;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       z-index: 10000;
-      color: #212529;
-      text-align: center;
-      padding: 30px;
+      padding: 20px;
       box-sizing: border-box;
     }
-    .reward-card {
+
+    /* 4. MTR 積分提示卡片 */
+    .card-box {
       background: white;
       padding: 30px 20px;
       border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      max-width: 350px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      max-width: 340px;
       width: 100%;
+      text-align: center;
+      box-sizing: border-box;
     }
-    .reward-card h2 {
-      color: #e63946;
-      font-size: 24px;
+    .card-box h2 {
+      color: #1b4332;
+      font-size: 22px;
+      margin-top: 0;
       margin-bottom: 15px;
     }
-    .reward-card p {
-      font-size: 16px;
+    .card-box p {
+      font-size: 15px;
       line-height: 1.6;
       color: #495057;
       margin-bottom: 25px;
     }
-    .back-btn {
-      background-color: #1b4332;
+
+    /* 5. 優惠券卡片專用樣式 */
+    .coupon-card {
+      background: linear-gradient(135deg, #fff5f5, #ffe3e3);
+      border: 2px dashed #e63946;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+    .coupon-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #e63946;
+      margin-bottom: 8px;
+    }
+    .coupon-code {
+      background: white;
+      border: 1px solid #ff8787;
+      padding: 10px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 20px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      color: #d63384;
+      margin: 10px 0;
+      user-select: all;
+    }
+
+    /* 按鈕樣式 */
+    .primary-btn {
+      background-color: #e63946;
       color: white;
       border: none;
-      padding: 12px 30px;
+      padding: 12px 28px;
       font-size: 16px;
+      font-weight: bold;
       border-radius: 25px;
       cursor: pointer;
+      width: 100%;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 10px rgba(230, 57, 70, 0.3);
+    }
+    .secondary-btn {
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      width: 100%;
     }
   </style>
 
   <script>
-    // 點擊開始按鈕
+    // 1. 點擊「開始體驗」
     function startAR() {
       document.getElementById('start-screen').style.opacity = '0';
       setTimeout(() => {
@@ -172,30 +217,43 @@
       }, 500);
     }
 
-    // 點擊成功貼紙後，跳轉到獎賞結果頁面（下一頁）
-    function goToRewardPage() {
-      document.getElementById('reward-page').style.display = 'flex';
+    // 2. 點擊貼紙 ➔ 開啟 MTR 積分提示頁
+    function openPointsPage() {
+      document.getElementById('points-page').style.display = 'flex';
     }
 
-    // 從獎賞頁面返回 AR 相機
-    function backToAR() {
-      document.getElementById('reward-page').style.display = 'none';
+    // 3. 點擊「領取優惠券」 ➔ 切換至優惠券頁面
+    function openCouponPage() {
+      document.getElementById('points-page').style.display = 'none';
+      document.getElementById('coupon-page').style.display = 'flex';
     }
 
-    // 監聽 MindAR 識別事件
+    // 複製優惠碼功能
+    function copyCode() {
+      const codeText = document.getElementById('code-text').innerText;
+      navigator.clipboard.writeText(codeText).then(() => {
+        alert('優惠碼已成功複製：' + codeText);
+      });
+    }
+
+    // 返回 AR 畫面
+    function closeAllModals() {
+      document.getElementById('points-page').style.display = 'none';
+      document.getElementById('coupon-page').style.display = 'none';
+    }
+
+    // 監聽 MindAR 事件
     document.addEventListener("DOMContentLoaded", function() {
       const targetEntity = document.querySelector('#ar-target');
       const scanGuide = document.getElementById('scan-text');
       const successSticker = document.getElementById('success-sticker');
 
-      // 當成功對準圖片時
       targetEntity.addEventListener('targetFound', event => {
-        scanGuide.innerText = "✨ 掃描成功！請點擊下方解鎖貼紙";
+        scanGuide.innerText = "✨ 掃描成功！點擊下方領取獎賞";
         scanGuide.style.background = "rgba(40, 167, 69, 0.8)";
-        successSticker.classList.add('show'); // 顯示成功貼紙
+        successSticker.classList.add('show');
       });
 
-      // 當移開圖片時
       targetEntity.addEventListener('targetLost', event => {
         scanGuide.innerText = "🎁 請將手機鏡頭對準指定的聖誕圖片";
         scanGuide.style.background = "rgba(0, 0, 0, 0.7)";
@@ -209,7 +267,7 @@
   <!-- 1. 開始按鈕畫面 -->
   <div id="start-screen">
     <h1>🎄 聖誕小鎮 WebAR 體驗</h1>
-    <p>點擊下方按鈕啟動相機，掃描圖案領取 MTR 積分！</p>
+    <p>點擊下方按鈕啟動相機，掃描圖案領取 MTR 積分及聖誕優惠券！</p>
     <button id="start-btn" onclick="startAR()">開始體驗</button>
   </div>
 
@@ -218,17 +276,33 @@
     <div id="scan-text" class="scan-guide">🎁 請將手機鏡頭對準指定的聖誕圖片</div>
   </div>
 
-  <!-- 3. 掃描成功貼紙（點擊可進入下一頁） -->
-  <div id="success-sticker" onclick="goToRewardPage()">
-    <span>🎉</span> <span>點擊領取 10 MTR 積分！</span>
+  <!-- 3. 掃描成功貼紙 -->
+  <div id="success-sticker" onclick="openPointsPage()">
+    <span>🎉</span> <span>點擊領取 MTR 積分與優惠券！</span>
   </div>
 
-  <!-- 4. 下一頁：MTR 積分結果頁面 -->
-  <div id="reward-page">
-    <div class="reward-card">
-      <h2>🎉 成功獲得獎賞！</h2>
+  <!-- 4. MTR 積分發放提示頁面 -->
+  <div id="points-page" class="modal-page">
+    <div class="card-box">
+      <h2>🎉 恭喜完成任務！</h2>
       <p>10 MTR分將於活動結束後七日內，存入得獎者的MTR Mobile賬戶</p>
-      <button class="back-btn" onclick="backToAR()">返回 AR 畫面</button>
+      <button class="primary-btn" onclick="openCouponPage()">下一步：領取聖誕優惠券 🎁</button>
+    </div>
+  </div>
+
+  <!-- 5. 優惠券領取頁面 -->
+  <div id="coupon-page" class="modal-page">
+    <div class="card-box">
+      <h2>🎁 聖誕專屬優惠券</h2>
+      
+      <div class="coupon-card">
+        <div class="coupon-title">MTR 聖誕小鎮限定 85 折優惠</div>
+        <p style="font-size: 13px; color: #666; margin: 5px 0;">憑此優惠碼於指定商戶消費即可享折扣</p>
+        <div class="coupon-code" id="code-text">XMAS2026MTR</div>
+        <button class="primary-btn" style="padding: 8px 15px; font-size: 14px; margin-bottom: 0;" onclick="copyCode()">複製優惠碼</button>
+      </div>
+
+      <button class="secondary-btn" onclick="closeAllModals()">返回 AR 畫面</button>
     </div>
   </div>
 
@@ -259,7 +333,6 @@
       </a-gltf-model>
     </a-entity>
 
-    <!-- 高畫質相機 -->
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
   </a-scene>
 
