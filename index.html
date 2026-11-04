@@ -1,177 +1,28 @@
-<!DOCTYPE html>
-<html lang="zh-HK">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>WebAR Christmas Village - 3D 動畫互動</title>
+<!-- 綁定目標圖片與自製的 3D 聖誕樹特效 -->
+<a-entity id="ar-target" mindar-image-target="targetIndex: 0">
+  
+  <!-- 1. 綠色聖誕樹主體（圓錐體），並加上旋轉動畫 -->
+  <a-cone 
+    position="0 0.5 0" 
+    radius-bottom="0.4" 
+    height="0.8" 
+    color="#2b9348"
+    animation="property: rotation; to: 0 360 0; dur: 4000; loop: true; easing: linear;">
+  </a-cone>
 
-  <!-- 引入 A-Frame 與相關擴充 -->
-  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+  <!-- 2. 樹頂的金色星星 -->
+  <a-sphere 
+    position="0 1 0" 
+    radius="0.1" 
+    color="#ffd166">
+  </a-sphere>
 
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
+  <!-- 3. 漂浮的雪球裝飾（會上下浮動） -->
+  <a-sphere 
+    position="0.3 0.2 0.3" 
+    radius="0.08" 
+    color="#ffffff"
+    animation="property: position; to: 0.3 0.4 0.3; dir: alternate; dur: 1000; loop: true;">
+  </a-sphere>
 
-    /* 1. 開始按鈕畫面 */
-    #start-screen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, #1b4332, #081c15);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      color: white;
-      text-align: center;
-      padding: 20px;
-      box-sizing: border-box;
-      transition: opacity 0.5s ease;
-    }
-    #start-screen h1 {
-      font-size: 28px;
-      margin-bottom: 10px;
-    }
-    #start-screen p {
-      font-size: 14px;
-      color: #adb5bd;
-      margin-bottom: 30px;
-    }
-    #start-btn {
-      background-color: #e63946;
-      color: white;
-      border: none;
-      padding: 15px 40px;
-      font-size: 18px;
-      font-weight: bold;
-      border-radius: 30px;
-      cursor: pointer;
-      box-shadow: 0 4px 15px rgba(230, 57, 70, 0.4);
-    }
-
-    /* 2. 掃描中引導介面 */
-    #scanner-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: center;
-      box-sizing: border-box;
-      padding: 30px;
-      z-index: 99;
-      display: none;
-    }
-    .scan-guide {
-      background: rgba(0, 0, 0, 0.7);
-      color: white;
-      padding: 12px 24px;
-      border-radius: 30px;
-      font-size: 15px;
-      text-align: center;
-      backdrop-filter: blur(5px);
-    }
-  </style>
-
-  <script>
-    // 點擊開始按鈕
-    function startAR() {
-      document.getElementById('start-screen').style.opacity = '0';
-      setTimeout(() => {
-        document.getElementById('start-screen').style.display = 'none';
-        document.getElementById('scanner-overlay').style.display = 'flex';
-      }, 500);
-    }
-
-    // 監聽識別事件，改為觸發動畫或特效
-    document.addEventListener("DOMContentLoaded", function() {
-      const targetEntity = document.querySelector('#ar-target');
-      const scanGuide = document.getElementById('scan-text');
-      const villageModel = document.querySelector('#village-model');
-
-      // 當成功對準圖片時
-      targetEntity.addEventListener('targetFound', event => {
-        scanGuide.innerText = "✨ 掃描成功！正在播放聖誕動畫";
-        scanGuide.style.background = "rgba(40, 167, 69, 0.8)";
-
-        // 範例：當掃描成功時，透過程式動態加入放大或旋轉的特效動畫
-        villageModel.setAttribute('animation', {
-          property: 'rotation',
-          to: '0 360 0',
-          dur: 5000,
-          loop: true,
-          easing: 'linear'
-        });
-      });
-
-      // 當移開圖片時
-      targetEntity.addEventListener('targetLost', event => {
-        scanGuide.innerText = "🎁 請將手機鏡頭對準指定的聖誕圖片";
-        scanGuide.style.background = "rgba(0, 0, 0, 0.7)";
-
-        // 移開時清除動態特效
-        villageModel.removeAttribute('animation');
-      });
-    });
-  </script>
-</head>
-
-<body>
-
-  <!-- 1. 開始按鈕畫面 -->
-  <div id="start-screen">
-    <h1>🎄 聖誕小鎮 WebAR 體驗</h1>
-    <p>點擊下方按鈕啟動相機，解鎖 3D 動畫特效！</p>
-    <button id="start-btn" onclick="startAR()">開始體驗</button>
-  </div>
-
-  <!-- 2. 掃描引導介面 -->
-  <div id="scanner-overlay">
-    <div id="scan-text" class="scan-guide">🎁 請將手機鏡頭對準指定的聖誕圖片</div>
-  </div>
-
-  <!-- A-Scene 結合 MindAR 圖像追蹤與高解析度相機設定 -->
-  <a-scene 
-    mindar-image="imageTargetSrc: ./assets/targets.mind; smooth: true; uiScanning: no;" 
-    color-space="sRGB" 
-    renderer="colorManagement: true, physicallyCorrectLights, highPerformance: true" 
-    vr-mode-ui="enabled: false" 
-    device-orientation-permission-ui="enabled: false">
-
-    <a-assets>
-      <a-asset-item id="christmas-village" src="./assets/christmas_village.glb"></a-asset-item>
-    </a-assets>
-
-    <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
-    <a-entity light="type: directional; intensity: 1;" position="1 2 1"></a-entity>
-
-    <!-- 綁定目標圖片與 3D 模型 (加入 id 以便透過 JS 控制動畫) -->
-    <a-entity id="ar-target" mindar-image-target="targetIndex: 0">
-      <a-gltf-model 
-        id="village-model"
-        src="#christmas-village" 
-        position="0 0 0" 
-        scale="0.6 0.6 0.6" 
-        rotation="0 0 0"
-        animation-mixer>
-      </a-gltf-model>
-    </a-entity>
-
-    <!-- 設定高畫質視訊流相機 -->
-    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-  </a-scene>
-
-</body>
-</html>
+</a-entity>
